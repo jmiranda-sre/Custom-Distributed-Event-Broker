@@ -5,33 +5,33 @@ A minimalist distributed event broker built from scratch in Python, demonstratin
 ## Architecture
 
 ```
-┌──────────────┐     ┌──────────────────────────────────┐     ┌──────────────┐
-│   Producer   │────▶│          Broker (Leader)          │────▶│   Consumer   │
-│   Client     │ TCP │                                  │ TCP │   Client     │
-└──────────────┘     │  ┌─────────┐  ┌───────────────┐  │     └──────────────┘
-                     │  │Command  │  │ CommitLog     │  │
-┌──────────────┐     │  │Dispatcher│──▶│ (append-only) │  │     ┌──────────────┐
-│   Consumer   │────▶│  └────┬────┘  └───────┬───────┘  │────▶│   Producer   │
-│   Client     │     │       │                │          │     │   Client     │
-└──────────────┘     │  ┌────▼────┐    ┌──────▼───────┐  │     └──────────────┘
-                     │  │Offset   │    │  Segment     │  │
-                     │  │Manager  │    │  .log + .idx │  │
-                     │  └─────────┘    └──────────────┘  │
-                     │                                  │
-                     │  ┌─────────────────────────────┐ │
-                     │  │     Failover Module          │ │
-                     │  │  Heartbeat ──▶ Follower      │ │
-                     │  │  Replication (REPLICATE)     │ │
-                     │  └─────────────────────────────┘ │
-                     └──────────────────────────────────┘
+┌──────────────┐      ┌─────────────────────────────────────┐      ┌──────────────┐
+│   Producer   │────▶│          Broker (Leader)            │────▶│   Consumer   │
+│   Client     │ TCP  │                                     │ TCP  │   Client     │
+└──────────────┘      │  ┌──────────┐    ┌───────────────┐  │      └──────────────┘
+                      │  │Command   │    │ CommitLog     │  │
+┌──────────────┐      │  │Dispatcher│──▶│ (append-only) │  │      ┌──────────────┐
+│   Consumer   │────▶│  └────┬─────┘    └───────┬───────┘  │────▶│   Producer   │
+│   Client     │      │       │                  │          │      │   Client     │
+└──────────────┘      │  ┌────▼────┐      ┌──────▼───────┐  │      └──────────────┘
+                      │  │Offset   │      │  Segment     │  │
+                      │  │Manager  │      │  .log + .idx │  │
+                      │  └─────────┘      └──────────────┘  │
+                      │                                     │
+                      │  ┌───────────────────────────────┐  │
+                      │  │     Failover Module           │  │
+                      │  │  Heartbeat ──▶ Follower      │  │
+                      │  │  Replication (REPLICATE)      │  │
+                      │  └───────────────────────────────┘  │
+                      └─────────────────────────────────────┘
                                     │
                                     │ TCP (REPLICATE frames)
                                     ▼
-                     ┌──────────────────────────────────┐
+                     ┌───────────────────────────────────┐
                      │       Broker (Follower)           │
                      │  Same structure, read-only until  │
                      │  promoted to leader               │
-                     └──────────────────────────────────┘
+                     └───────────────────────────────────┘
 ```
 
 ### Core Components
